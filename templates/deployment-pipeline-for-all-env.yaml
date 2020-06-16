@@ -1,0 +1,270 @@
+Description: This template deploys CI/CD pipelines to deploy to a ECS cluster for all environment
+
+Parameters:
+  CodePipelineCFTemplateWithoutApprovalURL:
+    Type: String
+
+  CodePipelineCFTemplateWithApprovalURL:
+    Type: String
+
+  CodePipelineNameForDevEnv:
+    Type: String
+
+  CodePipelineNameForQAEnv:
+    Type: String
+
+  CodePipelineNameForProdEnv:
+    Type: String
+
+  CodePipelineServiceRoleName:
+    Type: String
+    Default: systemname-codepipeline-service-role
+
+  CodePipelineArtifactBucketName:
+    Type: String
+    Default: systemname-source-code
+
+  SNSTopicName:
+    Type: String
+    Default: systemname-devops-operator-01
+
+  CodeCommitRepositoryName:
+    Type: String
+
+  CodeCommitBranchNameForDevEnv:
+    Type: String
+    Default: master
+
+  CodeCommitBranchNameForQAEnv:
+    Type: String
+    Default: qa
+
+  CodeCommitBranchNameForProdEnv:
+    Type: String
+    Default: prod
+
+  CodeBuildNodejsProjectName:
+    Type: String
+    Default: systemname-build-nodejs
+
+  CodeBuildContainerImageProjectName:
+    Type: String
+    Default: systemname-build-containerImage
+
+  ECRRepositoryNameForDevEnv:
+    Type: String
+    Default: systemname-d/
+
+  ECRRepositoryNameForQAEnv:
+    Type: String
+    Default: systemname-q/
+
+  ECRRepositoryNameForProdEnv:
+    Type: String
+    Default: systemname-p/
+
+  ECSTaskContainerName:
+    Type: String
+
+  LifecyclePolicyTextForDevEnv:
+    Type: String
+    Default: '{"rules":[{"action":{"type":"expire"},"selection":{"countType":"imageCountMoreThan","countNumber":5,"tagStatus":"any"},"description":"LifeCycle policy for a development environment","rulePriority":1}]}'
+
+  LifecyclePolicyTextForQAEnv:
+    Type: String
+    Default: '{"rules":[{"action":{"type":"expire"},"selection":{"countType":"imageCountMoreThan","countNumber":5,"tagStatus":"any"},"description":"LifeCycle policy for a quality assurance environment","rulePriority":1}]}'
+
+  LifecyclePolicyTextForProdEnv:
+    Type: String
+    Default: '{"rules":[{"action":{"type":"expire"},"selection":{"countType":"imageCountMoreThan","countNumber":100,"tagStatus":"any"},"description":"LifeCycle policy for a production environment","rulePriority":1}]}'
+
+  ECSClusterNameForDevEnv:
+    Type: String
+    Default: dev
+
+  ECSClusterNameForQAEnv:
+    Type: String
+    Default: qa
+
+  ECSClusterNameForProdEnv:
+    Type: String
+    Default: prod
+
+  ECSServiceNameForDevEnv:
+    Type: String
+
+  ECSServiceNameForQAEnv:
+    Type: String
+
+  ECSServiceNameForProdEnv:
+    Type: String
+
+  CloudWatchEventRoleName:
+    Type: String
+    Default: systemname-codepipeline-events-service-role
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "General Settings"
+        Parameters: 
+          - CodePipelineCFTemplateWithoutApprovalURL
+          - CodePipelineCFTemplateWithApprovalURL
+      - 
+        Label: 
+          default: "CodePipeline Settings"
+        Parameters: 
+          - CodePipelineNameForDevEnv
+          - CodePipelineNameForQAEnv
+          - CodePipelineNameForProdEnv
+          - CodePipelineServiceRoleName
+          - CodePipelineArtifactBucketName
+          - SNSTopicName
+          - CloudWatchEventRoleName
+      - 
+        Label: 
+          default: "CodeCommit Settings"
+        Parameters: 
+          - CodeCommitRepositoryName
+          - CodeCommitBranchNameForDevEnv
+          - CodeCommitBranchNameForQAEnv
+          - CodeCommitBranchNameForProdEnv
+      - 
+        Label: 
+          default: "CodeBuild Settings"
+        Parameters: 
+          - CodeBuildNodejsProjectName
+          - CodeBuildContainerImageProjectName
+      - 
+        Label: 
+          default: "ECS Settings"
+        Parameters: 
+          - ECRRepositoryNameForDevEnv
+          - ECRRepositoryNameForQAEnv
+          - ECRRepositoryNameForProdEnv
+          - ECSTaskContainerName
+          - LifecyclePolicyTextForDevEnv
+          - LifecyclePolicyTextForQAEnv
+          - LifecyclePolicyTextForProdEnv
+          - ECSClusterNameForDevEnv
+          - ECSClusterNameForQAEnv
+          - ECSClusterNameForProdEnv
+          - ECSServiceNameForDevEnv
+          - ECSServiceNameForQAEnv
+          - ECSServiceNameForProdEnv
+    ParameterLabels: 
+      CodePipelineCFTemplateWithoutApprovalURL: 
+        default: "What is the s3 URL of the CloudFormation template for a CodePipeline without approval?"
+      CodePipelineCFTemplateWithApprovalURL: 
+        default: "What is the s3 URL of the CloudFormation template for a CodePipeline with approval?"
+      CodePipelineNameForDevEnv: 
+        default: "What is the Code Pipeline Name for the development environment?"
+      CodePipelineNameForQAEnv: 
+        default: "What is the Code Pipeline Name for the quality assurance environment?"
+      CodePipelineNameForProdEnv: 
+        default: "What is the Code Pipeline Name for the production environment?"
+      CodePipelineServiceRoleName: 
+        default: "Which CodePipeline service role should be used?"
+      CodePipelineArtifactBucketName: 
+        default: "Which s3 bucket should be used for a codepipeline artifact store?"
+      SNSTopicName: 
+        default: "Which SNS Topic should be used for the approval of a production deployment?"
+      CloudWatchEventRoleName: 
+        default: "Which Role should be used for CloudWatch Event?"
+      CodeCommitRepositoryName: 
+        default: "Which CodeCommit Repository should be used?"
+      CodeCommitBranchNameForDevEnv: 
+        default: "Which CodeCommit Branch should be used for the development environment?"
+      CodeCommitBranchNameForQAEnv: 
+        default: "Which CodeCommit Branch should be used for the quality assurance environment?"
+      CodeCommitBranchNameForProdEnv: 
+        default: "Which CodeCommit Branch should be used for the production environment?"
+      CodeBuildNodejsProjectName: 
+        default: "Which CodeBuild Project should be used for Node.js application build?"
+      CodeBuildContainerImageProjectName: 
+        default: "Which CodeBuild Project should be used for container image build?"
+      ECRRepositoryNameForDevEnv: 
+        default: 'What is the ECR Repository Name for the development environment?'
+      ECRRepositoryNameForQAEnv: 
+        default: 'What is the ECR Repository Name for the quality assurance environment?'
+      ECRRepositoryNameForProdEnv: 
+        default: 'What is the ECR Repository Name for the production environment?'
+      ECSTaskContainerName: 
+        default: 'What is the ECS Container Name?'
+      ECSClusterNameForDevEnv: 
+        default: "Which ECS Cluster should a container image be deployed to for the development environment?"
+      ECSClusterNameForQAEnv: 
+        default: "Which ECS Cluster should a container image be deployed to for the quality assurance environment?"
+      ECSClusterNameForProdEnv: 
+        default: "Which ECS Cluster should a container image be deployed to for the production environment?"
+      LifecyclePolicyTextForDevEnv: 
+        default: 'Describe lifecycle policy text for the development environment?'
+      LifecyclePolicyTextForQAEnv: 
+        default: 'Describe lifecycle policy text for the quality assurance environment?'
+      LifecyclePolicyTextForProdEnv: 
+        default: 'Describe lifecycle policy text for the production environment?'
+      ECSServiceNameForDevEnv: 
+        default: "Which ECS Service should a container image be deployed to for the development environment?"
+      ECSServiceNameForQAEnv: 
+        default: "Which ECS Service should a container image be deployed to for the quality assurance environment?"
+      ECSServiceNameForProdEnv: 
+        default: "Which ECS Service should a container image be deployed to for the production environment?"
+
+Resources:
+  CodePipeLineForDevEnv:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref CodePipelineCFTemplateWithoutApprovalURL
+      Parameters:
+        CodePipelineName: !Ref CodePipelineNameForDevEnv
+        CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName
+        CodePipelineArtifactBucketName: !Ref CodePipelineArtifactBucketName
+        CodeCommitRepositoryName: !Ref CodeCommitRepositoryName
+        CodeCommitBranchName: !Ref CodeCommitBranchNameForDevEnv
+        CodeBuildNodejsProjectName: !Ref CodeBuildNodejsProjectName
+        CodeBuildContainerImageProjectName: !Ref CodeBuildContainerImageProjectName
+        LifecyclePolicyText: !Ref LifecyclePolicyTextForDevEnv
+        ECRRepositoryName: !Ref ECRRepositoryNameForDevEnv
+        ECSTaskContainerName: !Ref ECSTaskContainerName
+        ECSClusterName: !Ref ECSClusterNameForDevEnv
+        ECSServiceName: !Ref ECSServiceNameForDevEnv
+        CloudWatchEventRoleName: !Ref CloudWatchEventRoleName
+  CodePipeLineForQAEnv:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref CodePipelineCFTemplateWithoutApprovalURL
+      Parameters:
+        CodePipelineName: !Ref CodePipelineNameForQAEnv
+        CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName
+        CodePipelineArtifactBucketName: !Ref CodePipelineArtifactBucketName
+        CodeCommitRepositoryName: !Ref CodeCommitRepositoryName
+        CodeCommitBranchName: !Ref CodeCommitBranchNameForQAEnv
+        CodeBuildNodejsProjectName: !Ref CodeBuildNodejsProjectName
+        CodeBuildContainerImageProjectName: !Ref CodeBuildContainerImageProjectName
+        LifecyclePolicyText: !Ref LifecyclePolicyTextForQAEnv
+        ECRRepositoryName: !Ref ECRRepositoryNameForQAEnv
+        ECSTaskContainerName: !Ref ECSTaskContainerName
+        ECSClusterName: !Ref ECSClusterNameForQAEnv
+        ECSServiceName: !Ref ECSServiceNameForQAEnv
+        CloudWatchEventRoleName: !Ref CloudWatchEventRoleName
+  CodePipeLineForProdEnv:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref CodePipelineCFTemplateWithApprovalURL
+      Parameters:
+        CodePipelineName: !Ref CodePipelineNameForProdEnv
+        CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName
+        CodePipelineArtifactBucketName: !Ref CodePipelineArtifactBucketName
+        SNSTopicName: !Ref SNSTopicName
+        CodeCommitRepositoryName: !Ref CodeCommitRepositoryName
+        CodeCommitBranchName: !Ref CodeCommitBranchNameForProdEnv
+        CodeBuildNodejsProjectName: !Ref CodeBuildNodejsProjectName
+        CodeBuildContainerImageProjectName: !Ref CodeBuildContainerImageProjectName
+        LifecyclePolicyText: !Ref LifecyclePolicyTextForProdEnv
+        ECRRepositoryName: !Ref ECRRepositoryNameForProdEnv
+        ECSTaskContainerName: !Ref ECSTaskContainerName
+        ECSClusterName: !Ref ECSClusterNameForProdEnv
+        ECSServiceName: !Ref ECSServiceNameForProdEnv
+        CloudWatchEventRoleName: !Ref CloudWatchEventRoleName

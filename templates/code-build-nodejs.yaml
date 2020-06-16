@@ -1,0 +1,41 @@
+Description: This template deploys a CodeBuild Project to build a Node.js application
+
+Parameters:
+  CodeBuildProjectName:
+    Type: String
+    Default: systemname-build-nodejs
+  CodeBuildServiceRoleName:
+    Type: String
+    Default: systemname-codebuild-build-nodejs-service-role
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "CodeBuild Settings"
+        Parameters: 
+          - CodeBuildProjectName
+          - CodeBuildServiceRoleName
+    ParameterLabels: 
+      CodeBuildProjectName: 
+        default: "What is the CodeBuild Project Name for Node.js application build?"
+      CodeBuildServiceRoleName: 
+        default: "Which CodeBuild service role should be used?"
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref CodeBuildProjectName
+      Artifacts:
+        Type: CODEPIPELINE
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec_nodejs.yml
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/nodejs:10.14.1-1.7.0
+        Type: LINUX_CONTAINER
+      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/${CodeBuildServiceRoleName}
+

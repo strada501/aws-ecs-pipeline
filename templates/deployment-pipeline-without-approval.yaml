@@ -1,0 +1,210 @@
+Description: This template deploys a CI/CD pipeline to deploy to a ECS cluster without approval
+
+Parameters:
+  CodePipelineName:
+    Type: String
+
+  CodePipelineServiceRoleName:
+    Type: String
+    Default: systemname-codepipeline-service-role
+
+  CodePipelineArtifactBucketName:
+    Type: String
+
+  CodeCommitRepositoryName:
+    Type: String
+
+  CodeCommitBranchName:
+    Type: String
+
+  CodeBuildNodejsProjectName:
+    Type: String
+    Default: systemname-build-nodejs
+
+  CodeBuildContainerImageProjectName:
+    Type: String
+    Default: systemname-build-containerImage
+
+  ECRRepositoryName:
+    Type: String
+
+  ECSTaskContainerName:
+    Type: String
+
+  LifecyclePolicyText:
+    Type: String
+    Default: '{"rules":[{"action":{"type":"expire"},"selection":{"countType":"imageCountMoreThan","countNumber":5,"tagStatus":"any"},"description":"LifeCycle policy for a hotfix environment","rulePriority":1}]}'
+
+  ECSClusterName:
+    Type: String
+
+  ECSServiceName:
+    Type: String
+
+  CloudWatchEventRoleName:
+    Type: String
+    Default: systemname-codepipeline-events-service-role
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: 'CodePipeline Settings'
+        Parameters: 
+          - CodePipelineName
+          - CodePipelineServiceRoleName
+          - CodePipelineArtifactBucketName
+          - CloudWatchEventRoleName
+      - 
+        Label: 
+          default: 'CodeCommit Settings'
+        Parameters: 
+          - CodeCommitRepositoryName
+          - CodeCommitBranchName
+      - 
+        Label: 
+          default: 'CodeBuild Settings'
+        Parameters: 
+          - CodeBuildNodejsProjectName
+          - CodeBuildContainerImageProjectName
+      - 
+        Label: 
+          default: 'ECS Settings'
+        Parameters: 
+          - ECRRepositoryName
+          - ECSTaskContainerName
+          - LifecyclePolicyText
+          - ECSClusterName
+          - ECSServiceName
+    ParameterLabels: 
+      CodePipelineName: 
+        default: 'What is the Code Pipeline Name?'
+      CodePipelineServiceRoleName: 
+        default: 'Which CodePipeline service role should be used?'
+      CodePipelineArtifactBucketName: 
+        default: 'Which s3 bucket should be used for a codepipeline artifact store?'
+      CloudWatchEventRoleName: 
+        default: "Which Role should be used for CloudWatch Event?"
+      CodeCommitRepositoryName: 
+        default: 'Which CodeCommit Repository should be used?'
+      CodeCommitBranchName: 
+        default: 'Which CodeCommit Branch should be used?'
+      CodeBuildNodejsProjectName: 
+        default: 'Which CodeBuild Project should be used for Node.js application build?'
+      CodeBuildContainerImageProjectName: 
+        default: 'Which CodeBuild Project should be used for container image build?'
+      ECRRepositoryName: 
+        default: 'What is the ECR Repository Name?'
+      ECSTaskContainerName: 
+        default: 'What is the ECS Container Name?'
+      LifecyclePolicyText: 
+        default: 'Describe lifecycle policy text?'
+      ECSClusterName: 
+        default: 'Which ECS Cluster should a container image be deployed to?'
+      ECSServiceName: 
+        default: 'Which ECS Service should a container image be deployed to?'
+
+Resources:
+  ECRRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: !Ref ECRRepositoryName
+      LifecyclePolicy:
+        LifecyclePolicyText: !Ref LifecyclePolicyText
+  CWEventTrigger:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Name: !Ref CodePipelineName
+      Description: !Sub 'InvokePipeline for ${CodePipelineName}'
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - CodeCommit Repository State Change
+        resources:
+          - !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${CodeCommitRepositoryName}'
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - !Ref CodeCommitBranchName
+      Targets:
+        - Arn: !Sub 'arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}'
+          Id: Id345
+          RoleArn: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${CloudWatchEventRoleName}'
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref CodePipelineName
+      RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/${CodePipelineServiceRoleName}
+      ArtifactStore:
+        Type: S3
+        Location: !Ref CodePipelineArtifactBucketName
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              Configuration:
+                RepositoryName: !Ref CodeCommitRepositoryName
+                BranchName: !Ref CodeCommitBranchName
+                PollForSourceChanges: false
+              OutputArtifacts:
+                - Name: SourceArtifact
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: BuildApp
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref CodeBuildNodejsProjectName
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildAppArtifact
+              RunOrder: 1
+            - Name: BuildContainer
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref CodeBuildContainerImageProjectName
+                EnvironmentVariables: !Sub '[{"name":"CONTAINER_NAME","value":"${ECSTaskContainerName}","type":"PLAINTEXT"},{"name":"ECR_REPOSITORY_URI","value":"${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}","type":"PLAINTEXT"}]'
+              InputArtifacts:
+                - Name: BuildAppArtifact
+              OutputArtifacts:
+                - Name: BuildContainerArtifact
+              RunOrder: 2
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: ECS
+              Configuration:
+                ClusterName: !Ref ECSClusterName
+                ServiceName: !Ref ECSServiceName
+              InputArtifacts:
+                - Name: BuildContainerArtifact
+              RunOrder: 1
+
+
+Outputs:
+  PipelineUrl:
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${Pipeline}
