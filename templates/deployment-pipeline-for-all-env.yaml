@@ -1,12 +1,6 @@
 Description: This template deploys CI/CD pipelines to deploy to a ECS cluster for all environment
 
 Parameters:
-  CodePipelineCFTemplateWithoutApprovalURL:
-    Type: String
-
-  CodePipelineCFTemplateWithApprovalURL:
-    Type: String
-
   CodePipelineNameForDevEnv:
     Type: String
 
@@ -18,15 +12,12 @@ Parameters:
 
   CodePipelineServiceRoleName:
     Type: String
-    Default: systemname-codepipeline-service-role
 
   CodePipelineArtifactBucketName:
     Type: String
-    Default: systemname-source-code
 
   SNSTopicName:
     Type: String
-    Default: systemname-devops-operator-01
 
   CodeCommitRepositoryName:
     Type: String
@@ -37,31 +28,24 @@ Parameters:
 
   CodeCommitBranchNameForQAEnv:
     Type: String
-    Default: qa
 
   CodeCommitBranchNameForProdEnv:
     Type: String
-    Default: prod
 
   CodeBuildNodejsProjectName:
     Type: String
-    Default: systemname-build-nodejs
 
   CodeBuildContainerImageProjectName:
     Type: String
-    Default: systemname-build-containerImage
 
   ECRRepositoryNameForDevEnv:
     Type: String
-    Default: systemname-d/
 
   ECRRepositoryNameForQAEnv:
     Type: String
-    Default: systemname-q/
 
   ECRRepositoryNameForProdEnv:
     Type: String
-    Default: systemname-p/
 
   ECSTaskContainerName:
     Type: String
@@ -80,15 +64,12 @@ Parameters:
 
   ECSClusterNameForDevEnv:
     Type: String
-    Default: dev
 
   ECSClusterNameForQAEnv:
     Type: String
-    Default: qa
 
   ECSClusterNameForProdEnv:
     Type: String
-    Default: prod
 
   ECSServiceNameForDevEnv:
     Type: String
@@ -101,17 +82,10 @@ Parameters:
 
   CloudWatchEventRoleName:
     Type: String
-    Default: systemname-codepipeline-events-service-role
 
 Metadata: 
   AWS::CloudFormation::Interface: 
     ParameterGroups: 
-      - 
-        Label: 
-          default: "General Settings"
-        Parameters: 
-          - CodePipelineCFTemplateWithoutApprovalURL
-          - CodePipelineCFTemplateWithApprovalURL
       - 
         Label: 
           default: "CodePipeline Settings"
@@ -155,10 +129,6 @@ Metadata:
           - ECSServiceNameForQAEnv
           - ECSServiceNameForProdEnv
     ParameterLabels: 
-      CodePipelineCFTemplateWithoutApprovalURL: 
-        default: "What is the s3 URL of the CloudFormation template for a CodePipeline without approval?"
-      CodePipelineCFTemplateWithApprovalURL: 
-        default: "What is the s3 URL of the CloudFormation template for a CodePipeline with approval?"
       CodePipelineNameForDevEnv: 
         default: "What is the Code Pipeline Name for the development environment?"
       CodePipelineNameForQAEnv: 
@@ -216,7 +186,7 @@ Resources:
   CodePipeLineForDevEnv:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Ref CodePipelineCFTemplateWithoutApprovalURL
+      TemplateURL: 'https://cf-templates-strada.s3-ap-northeast-1.amazonaws.com/ecs-continuous-deployment/deployment-pipeline-without-approval.yaml'
       Parameters:
         CodePipelineName: !Ref CodePipelineNameForDevEnv
         CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName
@@ -234,7 +204,7 @@ Resources:
   CodePipeLineForQAEnv:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Ref CodePipelineCFTemplateWithoutApprovalURL
+      TemplateURL: 'https://cf-templates-strada.s3-ap-northeast-1.amazonaws.com/ecs-continuous-deployment/deployment-pipeline-without-approval.yaml'
       Parameters:
         CodePipelineName: !Ref CodePipelineNameForQAEnv
         CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName
@@ -252,7 +222,7 @@ Resources:
   CodePipeLineForProdEnv:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Ref CodePipelineCFTemplateWithApprovalURL
+      TemplateURL: 'https://cf-templates-strada.s3-ap-northeast-1.amazonaws.com/ecs-continuous-deployment/deployment-pipeline-with-approval.yaml'
       Parameters:
         CodePipelineName: !Ref CodePipelineNameForProdEnv
         CodePipelineServiceRoleName: !Ref CodePipelineServiceRoleName

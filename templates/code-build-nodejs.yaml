@@ -1,12 +1,10 @@
-Description: This template deploys a CodeBuild Project to build a Node.js application
+Description: This template deploys a CodeBuild project to build a Node.js application
 
 Parameters:
   CodeBuildProjectName:
     Type: String
-    Default: systemname-build-nodejs
   CodeBuildServiceRoleName:
     Type: String
-    Default: systemname-codebuild-build-nodejs-service-role
 
 Metadata: 
   AWS::CloudFormation::Interface: 
