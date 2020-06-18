@@ -6,7 +6,6 @@ Parameters:
 
   CodePipelineServiceRoleName:
     Type: String
-    Default: systemname-codepipeline-service-role
 
   CodePipelineArtifactBucketName:
     Type: String
@@ -19,11 +18,9 @@ Parameters:
 
   CodeBuildNodejsProjectName:
     Type: String
-    Default: systemname-build-nodejs
 
   CodeBuildContainerImageProjectName:
     Type: String
-    Default: systemname-build-containerImage
 
   ECRRepositoryName:
     Type: String
@@ -43,7 +40,6 @@ Parameters:
 
   CloudWatchEventRoleName:
     Type: String
-    Default: systemname-codepipeline-events-service-role
 
 Metadata: 
   AWS::CloudFormation::Interface: 
