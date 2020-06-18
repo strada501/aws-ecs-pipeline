@@ -173,8 +173,10 @@ ex) IAM policy for the CodeBuild service role
         {
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:logs:ap-northeast-1:648751534258:log-group:/aws/codebuild/<systemname-prefix>-build-nodejs",
-                "arn:aws:logs:ap-northeast-1:648751534258:log-group:/aws/codebuild/<systemname-prefix>-build-nodejs:*"
+                "arn:aws:logs:ap-northeast-1:<AWS Account ID>:log-group:/aws/codebuild/<nodejs-build-project-name>",
+                "arn:aws:logs:ap-northeast-1:<AWS Account ID>:log-group:/aws/codebuild/<nodejs-build-project-name>:*",
+                "arn:aws:logs:ap-northeast-1:<AWS Account ID>:log-group:/aws/codebuild/<containerImage-build-project-name>",
+                "arn:aws:logs:ap-northeast-1:<AWS Account ID>:log-group:/aws/codebuild/<containerImage-build-project-name>:*"
             ],
             "Action": [
                 "logs:CreateLogGroup",
@@ -185,7 +187,7 @@ ex) IAM policy for the CodeBuild service role
         {
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::<systename-prefix>-source-code*"
+                "arn:aws:s3:::<s3-bucket-name>*"
             ],
             "Action": [
                 "s3:PutObject",
