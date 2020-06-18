@@ -215,7 +215,6 @@ ex) IAM policy for the CloudWatch service roles
 #### 3. Create a S3 bucket for an artifact store of a CodePipeline
 #### 4. Create SNS topic for an production release approval notification
 #### 5. Create deploy target 3 ECS clusters (Dev/QA/Producion)
-#### 6. Create 3 ECR repositories (Dev/QA/Producion)
 
 ## Creating the pipeline
 
