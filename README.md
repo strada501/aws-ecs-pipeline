@@ -16,7 +16,7 @@ group of t2.micro instances will be created to host your service.
 
 [![](images/architecture.png)][architecture]
 ## Prerequisite
-#### 1. Create IAM service role for CodePipeline, CodeBuild
+#### 1. Create IAM service role for CodePipeline, CodeBuild, CloudWatch
 ex) IAM policy for the CodePipeline service roles
 ```Console
 {
@@ -194,6 +194,19 @@ ex) IAM policy for the CodeBuild service role
                 "s3:GetObject",
                 "s3:GetObjectVersion"
             ]
+        }
+    ]
+}
+```
+ex) IAM policy for the CloudWatch service roles
+```Console
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "codepipeline:*",
+            "Resource": "*"
         }
     ]
 }
